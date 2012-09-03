@@ -1,3 +1,7 @@
+//
+// Program to print out the elements of a matrix in spiral order
+//
+
 #include<stdio.h>
 #define ROWS 4
 #define COLS 5
