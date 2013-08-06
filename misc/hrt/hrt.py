@@ -61,6 +61,7 @@ def get_levels(csv_obj):
   lvls = csv_obj[LVL_IDX].split('.')
   return map(lambda x: int(x), lvls)
 
+#TODO : treat base nodes as children of root node
 def create_base_node(robj):
   global BASE_NODES
 
@@ -88,18 +89,31 @@ def create_nodes(data):
     else:
       create_child_node(func)
 
+def draw_rect(ax, node, lvl):
+    rw = 5
+    color_d = {0 : "rgb",
+               1 : "cmy",
+               2 : "rgb"}
+    frect = plt.Rectangle((node.st, lvl * rw), node.duration, rw,
+            color=random.choice(color_d.get(lvl, "cmy")), ls='dashed')
+    ax.annotate(node.fname, (node.st + node.duration/2, lvl * rw + rw/2),
+                color='black', ha='center', va='center', fontsize=20)
+    ax.add_artist(frect)
+
+def draw(ax, node_list, lvl=0):
+    for node in node_list:
+      draw_rect(ax, node, lvl)
+      if node.children:
+        draw(ax, node.children, lvl + 1)
+
 def plot():
     fig = plt.figure()
     ax = fig.add_subplot(111)
+    draw(ax, BASE_NODES)
+    
     plt.xlabel('Time')
     plt.title('Function Timelines')
-    for node in BASE_NODES:
-        frect = plt.Rectangle((node.st, 0), node.duration, 10,
-                color=random.choice("rgbcmy"))
-        ax.annotate(node.fname, (node.st + node.duration/2, 5),
-                    color='black', ha='center', va='top', fontsize=20)
-        ax.add_artist(frect)
-    plt.xlim([0, BASE_NODES[-1].st + BASE_NODES[-1].duration])
+    plt.xlim([0, BASE_NODES[-1].st + BASE_NODES[-1].duration + 50])
     plt.ylim([0, 30])
     plt.show()
 
