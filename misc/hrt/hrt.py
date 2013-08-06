@@ -2,14 +2,15 @@
 Hierarchical Runtime Plotter
 """
 import csv
-import matplotlib
+import matplotlib.pyplot as plt
 from optparse import OptionParser as OP
+import random
 import pdb
 
 DELIM = ','
 QCHAR = '"'
 
-TST_F = "ipfunc.csv"
+TST_F = "ip_hrt.csv"
 NAME_IDX = 0
 LVL_IDX = 1
 DUR_IDX = 2
@@ -36,9 +37,14 @@ class FuncNode(object):
     self.children.insert(cidx, cobj)
 
 def check_args():
-    parser = OP()
+    usage = "usage: python hrt -f <csv>"
+    parser = OP(usage)
     parser.add_option("-f", dest="file", help="CSV input file")
+    parser.add_option("-d", dest="debug", help="DEBUG", action="store_true", 
+                            default=False)
     options, args = parser.parse_args()
+    if (not options.file) and (not options.debug):
+        parser.error(usage)
     return options
     
 def read_csv(file):
@@ -82,11 +88,41 @@ def create_nodes(data):
     else:
       create_child_node(func)
 
+def plot():
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    plt.xlabel('Time')
+    plt.title('Function Timelines')
+    for node in BASE_NODES:
+        frect = plt.Rectangle((node.st, 0), node.duration, 10,
+                color=random.choice("rgbcmy"))
+        ax.annotate(node.fname, (node.st + node.duration/2, 5),
+                    color='black', ha='center', va='top', fontsize=20)
+        ax.add_artist(frect)
+    plt.xlim([0, BASE_NODES[-1].st + BASE_NODES[-1].duration])
+    plt.ylim([0, 30])
+    plt.show()
+
+def debug_mode():
+    data = read_csv(TST_F)
+    create_nodes(data)
+    print "Checking csv struct"
+    assert BASE_NODES[0].children[1].duration == 100
+    assert BASE_NODES[0].children[1].fname == 'baz'
+    assert BASE_NODES[0].children[1].st == 50
+    assert BASE_NODES[0].children[1].children[1].fname == 'zar'
+    assert BASE_NODES[0].children[1].children[1].st == 80
+    print "CSV tree structure : pass"
+    plot()
+
 def main():
     options = check_args()
+    if options.debug:
+        debug_mode()
+        return
     data = read_csv(options.file)
     create_nodes(data)
-    print data
+    plot()
 
 if __name__ == "__main__":
     main()
