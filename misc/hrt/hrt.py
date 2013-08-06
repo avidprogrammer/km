@@ -14,6 +14,10 @@ TST_F = "ip_hrt.csv"
 NAME_IDX = 0
 LVL_IDX = 1
 DUR_IDX = 2
+RW = 5
+COLOR_D = {0 : "rgb",
+           1 : "cmy",
+           2 : "rgb"}
 
 BASE_NODES = []
 
@@ -52,7 +56,7 @@ def read_csv(file):
   rdr = csv.reader(fh)
   data = []
   for row in rdr:
-    data.append(row[:DUR_IDX] + [int(row[DUR_IDX])])
+    data.append(row[:DUR_IDX] + [float(row[DUR_IDX])])
   # Sort Data by levels
   data.sort(key=lambda x: len(x[LVL_IDX]))
   return data
@@ -89,20 +93,18 @@ def create_nodes(data):
     else:
       create_child_node(func)
 
-def draw_rect(ax, node, lvl):
-    rw = 5
-    color_d = {0 : "rgb",
-               1 : "cmy",
-               2 : "rgb"}
-    frect = plt.Rectangle((node.st, lvl * rw), node.duration, rw,
-            color=random.choice(color_d.get(lvl, "cmy")), ls='dashed')
-    ax.annotate(node.fname, (node.st + node.duration/2, lvl * rw + rw/2),
-                color='black', ha='center', va='center', fontsize=20)
+def draw_rect(ax, node, lvl, idx):
+    if not node.duration:
+        return
+    frect = plt.Rectangle((node.st, lvl * RW), node.duration, RW,
+            color=COLOR_D.get(lvl, "cmy")[(idx + (idx * lvl))%3])
+    ax.annotate(node.fname, (node.st + node.duration/2, lvl * RW + idx/1.5),
+                color='black', ha='center', va='bottom', fontsize=10)
     ax.add_artist(frect)
 
 def draw(ax, node_list, lvl=0):
-    for node in node_list:
-      draw_rect(ax, node, lvl)
+    for idx, node in enumerate(node_list):
+      draw_rect(ax, node, lvl, idx)
       if node.children:
         draw(ax, node.children, lvl + 1)
 
